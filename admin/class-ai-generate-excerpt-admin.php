@@ -146,10 +146,10 @@ class Ai_Generate_Excerpt_Admin {
 				'inputs' => $content,
 				'type' => 'text-summary',
 				'parameters' => [ 
-					'wait_for_model' => true,
 					'max_new_tokens' =>  NULL,
 					'max_length' => 200,
-					'min_length' => 30
+					'min_length' => 30,
+					'options' => "{wait_for_model:true}"
 				]
 			];
 
