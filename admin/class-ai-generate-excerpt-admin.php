@@ -139,7 +139,7 @@ class Ai_Generate_Excerpt_Admin {
 			// error_log($content);
 
 			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL,"https://api-inference.huggingface.co/models/Falconsai/text_summarization");
+			curl_setopt($ch, CURLOPT_URL,"https://api-inference.huggingface.co/models/facebook/bart-large-cnn");			
 			curl_setopt($ch, CURLOPT_POST, 1);
 
 			$post_data = [
