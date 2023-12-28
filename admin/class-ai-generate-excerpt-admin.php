@@ -62,6 +62,24 @@ class Ai_Generate_Excerpt_Admin {
 		}
 
 
+		add_filter( 'plugin_action_links_ai-generate-excerpt/ai-generate-excerpt.php', 'ai_generate_excerpt_settings_link' );
+		function ai_generate_excerpt_settings_link( $links ) {
+			// Build and escape the URL.
+			$url = esc_url( add_query_arg(
+				'page',
+				'ai-generate-excerpt',
+				get_admin_url() . 'options-general.php'
+			) );
+			// Create the link.
+			$settings_link = "<a href='$url'>" . __( 'Settings' ) . '</a>';
+			// Adds the link to the end of the array.
+			array_push(
+				$links,
+				$settings_link
+			);
+			return $links;
+		}//end nc_settings_link()
+
 		add_action('admin_init', 'ai_generate_settings_init');
 		function ai_generate_settings_init() {
 			register_setting( 'plugin_options', 'ai_generate_excerpt_options', 'plugin_options_validate' );
