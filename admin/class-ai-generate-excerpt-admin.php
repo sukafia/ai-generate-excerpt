@@ -164,14 +164,28 @@ class Ai_Generate_Excerpt_Admin {
 			curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 			
 			$server_output = curl_exec ($ch);
-			curl_close ($ch);			
+			curl_close ($ch);
+			
+			error_log($server_output);
 
 			$summary = NULL;
 
+			// Default error message
+			$error_message = 'The AI was unable to generate a summary for an unknown reason.';
+
 			try {
 				$json = json_decode($server_output, true);
-				// error_log(print_r($json, true));
-				$summary = $json[0]['summary_text'];
+
+				if(isset($json['error'])) {
+					if($json['error'] == "Rate limit reached. Please log in or use your apiToken") {
+						$error_message = "AI API rate limit reached. Please try again later.";
+					} else {
+						$error_message = $json['error'];
+					}
+				} else {
+					$summary = $json[0]['summary_text'];
+				}
+				error_log(print_r($json, true));
 
 				// Strip weird spaces before full-stops
 				$summary = str_replace(' .', '.', $summary);
@@ -191,7 +205,7 @@ class Ai_Generate_Excerpt_Admin {
 			} else {
 				$response = [
 					'type' => "error",
-					'message' => 'The AI was unable to generate a summary for an unknown reason.'
+					'message' => $error_message
 				];
 			}
 		}
