@@ -185,17 +185,10 @@ class Ai_Generate_Excerpt_Admin {
 				} else {
 					$summary = $json[0]['summary_text'];
 				}
-				error_log(print_r($json, true));
-
-				// Strip weird spaces before full-stops
-				$summary = str_replace(' .', '.', $summary);
 
 			} catch (Exception $e) {
 				error_log(print_r($server_output, TRUE));
 			}
-
-
-
 
 			if($summary) {
 				$response = [

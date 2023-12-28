@@ -11,6 +11,13 @@
 			const $excerptTextArea = $excerptMetaBox.find('textarea');
 
 			$generateButton.on('click', function() {
+
+
+				function htmlDecode(input) {
+					var doc = new DOMParser().parseFromString(input, "text/html");
+					return doc.documentElement.textContent;
+				}
+
 				this.blur();
 
 				const originalButtonText = $generateButton.text();
@@ -24,7 +31,7 @@
 					data: {action: "ai_generate_excerpt"},
 					success: function (response) {
 						if (response.type === "success") {
-							$excerptTextArea.text(response.excerpt);
+							$excerptTextArea[0].value = htmlDecode(response.excerpt);
 						} else {
 							alert("Error: " + response.message);
 						}
