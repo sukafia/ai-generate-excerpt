@@ -13,5 +13,5 @@ This plugin add as button to the 'Excerpt' metabox, allowing users to use AI to 
 
 This plugin add as button to the 'Excerpt' metabox, allowing users to use AI to generate an excerpt for a post. 
 
-The plugin uses the [Falcon/text_summarization](https://huggingface.co/Falconsai/text_summarization) model, via the [Hugging Face API](https://huggingface.co/). 
+The plugin uses the [bart-large-cnn text summarization](https://huggingface.co/facebook/bart-large-cnn) model, via the [Hugging Face API](https://huggingface.co/). 
 
