@@ -52,24 +52,24 @@ class Ai_Generate_Excerpt_Admin {
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 
-
+		// Add wp-ajax handler for action 'ai_generate_excerpt'
 		add_action("wp_ajax_ai_generate_excerpt", array($this, 'ai_generate_excerpt'));
 
-
+		// Add plugin settings page menu item
 		add_action('admin_menu', 'ai_generate_excerpt_admin_add_page');
 		function ai_generate_excerpt_admin_add_page() {
 			add_options_page('AI Generate Excerpt', 'AI Generate Excerpt', 'manage_options', 'ai-generate-excerpt', array('Ai_Generate_Excerpt_Admin', 'plugin_options_page'));
 		}
 
-
+		// Add 'settings' link to plugin in plugin list view
 		add_filter( 'plugin_action_links_ai-generate-excerpt/ai-generate-excerpt.php', 'ai_generate_excerpt_settings_link' );
 		function ai_generate_excerpt_settings_link( $links ) {
 			// Build and escape the URL.
-			$url = esc_url( add_query_arg(
+			$url = esc_url(add_query_arg(
 				'page',
 				'ai-generate-excerpt',
 				get_admin_url() . 'options-general.php'
-			) );
+			));
 			// Create the link.
 			$settings_link = "<a href='$url'>" . __( 'Settings' ) . '</a>';
 			// Adds the link to the end of the array.
@@ -78,8 +78,9 @@ class Ai_Generate_Excerpt_Admin {
 				$settings_link
 			);
 			return $links;
-		}//end nc_settings_link()
+		}
 
+		// Add settings page
 		add_action('admin_init', 'ai_generate_settings_init');
 		function ai_generate_settings_init() {
 			register_setting( 'plugin_options', 'ai_generate_excerpt_options', 'plugin_options_validate' );
@@ -97,14 +98,13 @@ class Ai_Generate_Excerpt_Admin {
 			function ai_generate_excerpt_setting_string() {
 				$options = get_option('ai_generate_excerpt_options');
 				echo "<input id='plugin_text_string' name='ai_generate_excerpt_options[api_key]' size='40' type='text' value='{$options['api_key']}' />";
-				
 			}
 
 		}
 	}
 
 	/**
-	 * Draw the options for this plugin
+	 * Draw the settings page for this plugin
 	 */
 	public static function plugin_options_page() {
 		?>
@@ -125,8 +125,7 @@ class Ai_Generate_Excerpt_Admin {
 	 * Generate the excerpt
 	 */
 	public function ai_generate_excerpt() {
-		// error_log('ai_generate_excerpt');
-
+		// Get the API key
 		$options = get_option('ai_generate_excerpt_options');
 		$api_key = $options['api_key'] ?? NULL;
 
@@ -148,13 +147,13 @@ class Ai_Generate_Excerpt_Admin {
 
 			// Get full post content
 			if(class_exists('Wayve')) {
+				// We have to do something fancy for Wayve
 				$content = Wayve::get_post_full_content($post_id);
 			} else {
 				$content = apply_filters('the_content', get_post_field('post_content', $post_id));
 			}
 
 			$content = wp_strip_all_tags($content);
-			// error_log($content);
 
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL,"https://api-inference.huggingface.co/models/facebook/bart-large-cnn");			
@@ -181,10 +180,10 @@ class Ai_Generate_Excerpt_Admin {
 			
 			curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
 			
-			$server_output = curl_exec ($ch);
+			$server_output = curl_exec($ch);
 			curl_close ($ch);
 			
-			error_log($server_output);
+			// error_log($server_output);
 
 			$summary = NULL;
 
@@ -196,6 +195,7 @@ class Ai_Generate_Excerpt_Admin {
 
 				if(isset($json['error'])) {
 					if($json['error'] == "Rate limit reached. Please log in or use your apiToken") {
+						// Improve confusing 🤗 rate limit message
 						$error_message = "AI API rate limit reached. Please try again later.";
 					} else {
 						$error_message = $json['error'];
@@ -221,7 +221,6 @@ class Ai_Generate_Excerpt_Admin {
 			}
 		}
 		
-
 		echo json_encode($response);
 		die(); // or WP returns 0!
 	}
