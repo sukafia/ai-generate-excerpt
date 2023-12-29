@@ -86,6 +86,22 @@ class Ai_Generate_Excerpt_Admin {
 			register_setting( 'plugin_options', 'ai_generate_excerpt_options', 'plugin_options_validate' );
 			add_settings_section('plugin_main', 'Hugging Face API key', 'ai_generate_excerpt_section_text', 'plugin');
 			add_settings_field('plugin_text_string', 'API key', 'ai_generate_excerpt_setting_string', 'plugin', 'plugin_main');
+			add_settings_field('plugin_model', 'Select AI Model', 'ai_generate_model_select', 'plugin', 'plugin_main');
+
+
+			function ai_generate_excerpt_get_options() {
+				$options = get_option('ai_generate_excerpt_options');
+
+				if(!isset($options['api_key'])) {
+					$options['api_key'] = '';
+				}
+
+				if(!isset($options['model'])) {
+					$options['model'] = 'facebook/bart-large-cnn';
+				}
+
+				return $options;
+			}
 
 			function ai_generate_excerpt_options() {
 				// Validator
@@ -96,8 +112,28 @@ class Ai_Generate_Excerpt_Admin {
 			}
 
 			function ai_generate_excerpt_setting_string() {
-				$options = get_option('ai_generate_excerpt_options');
+				$options = ai_generate_excerpt_get_options();
 				echo "<input id='plugin_text_string' name='ai_generate_excerpt_options[api_key]' size='40' type='text' value='{$options['api_key']}' />";
+			}
+
+			function ai_generate_model_select() {
+				$options = ai_generate_excerpt_get_options();
+
+				$models = [
+					'facebook/bart-large-cnn',
+					'Falconsai/text_summarization',
+					'google/pegasus-cnn_dailymail',
+					'google/pegasus-large',
+					'sshleifer/distilbart-cnn-12-6',
+				];
+
+				echo "<select name='ai_generate_excerpt_options[model]'>\n";
+				foreach($models as $model) {
+					$selected = ($model == $options['model'] ? ' selected' : '');
+					echo "<option{$selected} value='{$model}'>". strtolower($model) ."</option>\n";
+
+				}
+				echo "</select>\n";
 			}
 
 		}
@@ -153,10 +189,12 @@ class Ai_Generate_Excerpt_Admin {
 				$content = apply_filters('the_content', get_post_field('post_content', $post_id));
 			}
 
+			$model = get_option('ai_generate_excerpt_options')['model'] ??= 'facebook/bart-large-cnn';
+
 			$content = wp_strip_all_tags($content);
 
 			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL,"https://api-inference.huggingface.co/models/facebook/bart-large-cnn");			
+			curl_setopt($ch, CURLOPT_URL,"https://api-inference.huggingface.co/models/{$model}");			
 			curl_setopt($ch, CURLOPT_POST, 1);
 
 			$post_data = [
@@ -166,6 +204,7 @@ class Ai_Generate_Excerpt_Admin {
 					'max_new_tokens' =>  NULL,
 					'max_length' => 200,
 					'min_length' => 30,
+					'wait_for_model' => true,
 					'options' => "{wait_for_model:true}"
 				]
 			];
@@ -209,6 +248,17 @@ class Ai_Generate_Excerpt_Admin {
 			}
 
 			if($summary) {
+				/*
+				* Some models return badly formatted text, with spaces before/after full-stops
+				* all over the place. Clean them up here
+				*/
+
+				// Remove spaces before full-stops
+				$summary = str_replace(' .', '.', $summary);
+
+				// Add space after full-stop if there isn't one already
+				$summary = preg_replace('/\.(?! )/', '. ', $summary);
+
 				$response = [
 					'type' => "success",
 					'excerpt' => $summary
