@@ -8,20 +8,20 @@
  * registers the activation and deactivation functions, and defines a function
  * that starts the plugin.
  *
- * @link              https://github.com/sukafia/
+ * @link              https://github.com/chrishow/
  * @since             1.0.0
- * @package           WP_AI_Excerpt
+ * @package           Ai_Generate_Excerpt
  *
  * @wordpress-plugin
- * Plugin Name:       WP AI Excerpt
- * Plugin URI:        https://github.com/sukafia/wp-ai-excerpt
- * Description:       Uses AI to generate post excerpts in WordPress.
- * Version:           1.0
- * Author:            Sunday Ukafia
- * Author URI:        https://github.com/sukafia/
+ * Plugin Name:       AI Generate Excerpt
+ * Plugin URI:        https://github.com/chrishow/ai-generate-excerpt
+ * Description:       Uses AI to generate post excerpt.
+ * Version:           1.0.0
+ * Author:            Chris How
+ * Author URI:        https://github.com/chrishow//
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain:       wp-ai-excerpt
+ * Text Domain:       ai-generate-excerpt
  * Domain Path:       /languages
  */
 
@@ -31,79 +31,86 @@ if ( ! defined( 'WPINC' ) ) {
 }
 
 /**
- * Define plugin version.
+ * Currently plugin version.
+ * Start at version 1.0.0 and use SemVer - https://semver.org
+ * Rename this for your plugin and update it as you release new versions.
  */
-define( 'WP_AI_EXCERPT_VERSION', '1.0' );
+define( 'AI_GENERATE_EXCERPT_VERSION', '1.0.0' );
 
 /**
  * The code that runs during plugin activation.
+ * This action is documented in includes/class-ai-generate-excerpt-activator.php
  */
-function activate_wp_ai_excerpt() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wp-ai-excerpt-activator.php';
-	WP_AI_Excerpt_Activator::activate();
+function activate_ai_generate_excerpt() {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-ai-generate-excerpt-activator.php';
+	Ai_Generate_Excerpt_Activator::activate();
 }
 
 /**
  * The code that runs during plugin deactivation.
+ * This action is documented in includes/class-ai-generate-excerpt-deactivator.php
  */
-function deactivate_wp_ai_excerpt() {
-	require_once plugin_dir_path( __FILE__ ) . 'includes/class-wp-ai-excerpt-deactivator.php';
-	WP_AI_Excerpt_Deactivator::deactivate();
+function deactivate_ai_generate_excerpt() {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-ai-generate-excerpt-deactivator.php';
+	Ai_Generate_Excerpt_Deactivator::deactivate();
 }
 
-register_activation_hook( __FILE__, 'activate_wp_ai_excerpt' );
-register_deactivation_hook( __FILE__, 'deactivate_wp_ai_excerpt' );
+register_activation_hook( __FILE__, 'activate_ai_generate_excerpt' );
+register_deactivation_hook( __FILE__, 'deactivate_ai_generate_excerpt' );
 
 /**
  * The core plugin class that is used to define internationalization,
  * admin-specific hooks, and public-facing site hooks.
  */
-require plugin_dir_path( __FILE__ ) . 'includes/class-wp-ai-excerpt.php';
+require plugin_dir_path( __FILE__ ) . 'includes/class-ai-generate-excerpt.php';
 
 /**
- * Enqueue Gutenberg script for adding the "Generate Excerpt" button.
+ * Enqueue Gutenberg script for adding the excerpt button
  */
-function wp_ai_excerpt_enqueue_script() {
+function ai_generate_excerpt_enqueue_gutenberg_script() {
     wp_enqueue_script(
-        'wp-ai-excerpt-button',
-        plugins_url('admin/generate-excerpt-button.js', __FILE__),
-        array('wp-edit-post', 'wp-components', 'wp-data', 'wp-api-fetch'),
-        filemtime(plugin_dir_path(__FILE__) . 'admin/generate-excerpt-button.js'),
+        'ai-generate-excerpt-gutenberg',
+        plugin_dir_url(__FILE__) . 'admin/gutenberg.js',
+        array('wp-edit-post', 'wp-components', 'wp-element', 'wp-api'),
+        AI_GENERATE_EXCERPT_VERSION,
         true
     );
 }
-add_action('enqueue_block_editor_assets', 'wp_ai_excerpt_enqueue_script');
+add_action('enqueue_block_editor_assets', 'ai_generate_excerpt_enqueue_gutenberg_script');
 
 /**
- * Register REST API endpoint for generating excerpts.
+ * Register REST API endpoint to generate excerpts
  */
-function wp_ai_excerpt_rest_api() {
-    register_rest_route('wp-ai-excerpt/v1', '/generate', array(
+function ai_generate_excerpt_register_rest_route() {
+    register_rest_route('ai-generate-excerpt/v1', '/generate/', array(
         'methods'  => 'POST',
-        'callback' => 'wp_ai_excerpt_callback',
+        'callback' => 'ai_generate_excerpt_generate_excerpt',
         'permission_callback' => '__return_true',
     ));
 }
+add_action('rest_api_init', 'ai_generate_excerpt_register_rest_route');
 
 /**
- * Callback function for generating an excerpt.
+ * Callback function to generate AI-based excerpt
  */
-function wp_ai_excerpt_callback(WP_REST_Request $request) {
-    $content = sanitize_text_field($request->get_param('content'));
-
-    // AI-based excerpt generation logic (Replace this with actual AI API call)
-    $excerpt = substr(strip_tags($content), 0, 150) . '...';
-
+function ai_generate_excerpt_generate_excerpt($request) {
+    $params = $request->get_json_params();
+    $content = isset($params['content']) ? wp_strip_all_tags($params['content']) : '';
+    $excerpt = wp_trim_words($content, 55, '...');
     return rest_ensure_response(array('excerpt' => $excerpt));
 }
-add_action('rest_api_init', 'wp_ai_excerpt_rest_api');
 
 /**
- * Runs the plugin.
+ * Begins execution of the plugin.
+ *
+ * Since everything within the plugin is registered via hooks,
+ * then kicking off the plugin from this point in the file does
+ * not affect the page life cycle.
+ *
+ * @since    1.0.0
  */
-function run_wp_ai_excerpt() {
-	$plugin = new WP_AI_Excerpt();
+function run_ai_generate_excerpt() {
+	$plugin = new Ai_Generate_Excerpt();
 	$plugin->run();
 }
-
-run_wp_ai_excerpt();
+run_ai_generate_excerpt();
