@@ -65,20 +65,6 @@ register_deactivation_hook( __FILE__, 'deactivate_ai_generate_excerpt' );
 require plugin_dir_path( __FILE__ ) . 'includes/class-ai-generate-excerpt.php';
 
 /**
- * Enqueue Gutenberg script for adding the excerpt button
- */
-function ai_generate_excerpt_enqueue_gutenberg_script() {
-    wp_enqueue_script(
-        'ai-generate-excerpt-gutenberg',
-        plugin_dir_url(__FILE__) . 'admin/gutenberg.js',
-        array('wp-edit-post', 'wp-components', 'wp-element', 'wp-api'),
-        AI_GENERATE_EXCERPT_VERSION,
-        true
-    );
-}
-add_action('enqueue_block_editor_assets', 'ai_generate_excerpt_enqueue_gutenberg_script');
-
-/**
  * Register REST API endpoint to generate excerpts
  */
 function ai_generate_excerpt_register_rest_route() {
