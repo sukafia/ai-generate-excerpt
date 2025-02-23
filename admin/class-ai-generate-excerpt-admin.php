@@ -304,22 +304,28 @@ class Ai_Generate_Excerpt_Admin {
 	 *
 	 * @since    1.0.0
 	 */
-	public function enqueue_scripts() {
+	public function enqueue_scripts($hook) {
+		// Load only on post edit pages
+		if ($hook === 'post.php' || $hook === 'post-new.php') {
+			// Enqueue the script for Gutenberg
+			wp_enqueue_script(
+				$this->plugin_name . '-gutenberg', // Handle
+				plugin_dir_url(__FILE__) . 'js/ai-generate-excerpt-admin.js', // Script URL
+				array('wp-plugins', 'wp-edit-post', 'wp-element', 'wp-components', 'wp-api-fetch'), // Gutenberg dependencies
+				$this->version, // Version
+				true // Load in footer
+			);
 
-		/**
-		 * This function is provided for demonstration purposes only.
-		 *
-		 * An instance of this class should be passed to the run() function
-		 * defined in Ai_Generate_Excerpt_Loader as all of the hooks are defined
-		 * in that particular class.
-		 *
-		 * The Ai_Generate_Excerpt_Loader will then create the relationship
-		 * between the defined hooks and the functions defined in this
-		 * class.
-		 */
-
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/ai-generate-excerpt-admin.js', array( 'jquery' ), $this->version, false );
-
+			// Localize script for AJAX URL and nonce
+			wp_localize_script(
+				$this->plugin_name . '-gutenberg',
+				'aiGenerateExcerptData',
+				array(
+					'ajax_url' => admin_url('admin-ajax.php'),
+					'nonce' => wp_create_nonce('ai_generate_excerpt_nonce'),
+				)
+			);
+		}
 	}
 
 }
